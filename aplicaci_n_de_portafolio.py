@@ -11,19 +11,11 @@ st.set_page_config(
 st.title("💼 Portafolio de Actividades")
 st.write("Gestiona y visualiza tus entregas, imágenes y enlaces de proyectos.")
 
-# 1. Lista de actividades guardadas
+# 1. Inicializar la lista de actividades vacía
 if "actividades" not in st.session_state:
-    st.session_state.actividades = [
-        {
-            "titulo": "Predictor de calidad del aire — CORNARE (MARCO)",
-            "materia": "Pronóstico de PM2.5 / PM10",
-            "descripcion": "Carga de modelos .pkl descargados del notebook de pronóstico para generar predicciones en tiempo real.",
-            "imagen": None,  # Permite almacenar la imagen directamente
-            "enlace": ""
-        }
-    ]
+    st.session_state.actividades = []
 
-# 2. PANEL LATERAL: Agregar Actividad de forma simple
+# 2. PANEL LATERAL: Agregar Actividad o Editar Enlaces
 st.sidebar.header("🛠️ Panel de Control")
 
 opcion = st.sidebar.radio("Selecciona una acción:", ["➕ Nueva Actividad", "🔗 Editar / Agregar Enlace"])
@@ -45,11 +37,11 @@ if opcion == "➕ Nueva Actividad":
 
     if st.sidebar.button("✨ Guardar Actividad", use_container_width=True):
         if nuevo_titulo and nueva_materia:
-            # Si se sube una imagen se procesa; si no, queda una por defecto
+            # Si sube imagen la guarda, si no deja una por defecto
             if imagen_archivo is not None:
                 img_final = Image.open(imagen_archivo)
             else:
-                img_final = "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80"
+                img_final = None
             
             nueva_act = {
                 "titulo": nuevo_titulo,
@@ -80,11 +72,16 @@ elif opcion == "🔗 Editar / Agregar Enlace":
             act_obj["enlace"] = link_actualizado
             st.sidebar.success("¡Enlace actualizado!")
             st.rerun()
+    else:
+        st.sidebar.info("Aún no tienes actividades registradas.")
 
 st.divider()
 
 # 3. VISTA PRINCIPAL
 st.subheader(f"📌 Entregables ({len(st.session_state.actividades)})")
+
+if not st.session_state.actividades:
+    st.info("👋 No hay actividades guardadas aún. Usa el panel lateral izquierdo para agregar la primera.")
 
 for act in st.session_state.actividades:
     with st.container():
