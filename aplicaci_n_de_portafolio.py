@@ -1,84 +1,126 @@
 import streamlit as st
 
-# Configuración inicial de la página
+# Configuración de la página
 st.set_page_config(
     page_title="Portafolio de Actividades",
-    page_icon="📁",
+    page_icon="💼",
     layout="wide"
 )
 
-st.title("📁 Portafolio de Actividades")
-st.write("Bienvenido a mi portafolio. Explora las actividades y gestiona sus enlaces de entrega.")
+# Título Principal
+st.title("💼 Portafolio de Actividades")
+st.write("Gestiona y visualiza tus entregas, imágenes y enlaces de proyectos en un solo lugar.")
 
-# 1. Lista inicial de actividades guardada en la sesión
+# 1. Inicializar la lista de actividades en el estado de la sesión
 if "actividades" not in st.session_state:
     st.session_state.actividades = [
         {
-            "id": 1,
             "titulo": "Casos de Prueba (DemoQA)",
             "materia": "Pruebas de Software",
             "descripcion": "Diseño y ejecución de la plantilla de casos de prueba para validación de formularios web.",
-            "imagen": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop",
-            "enlace": ""
+            "imagen": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80",
+            "enlace": "https://docs.google.com/spreadsheets/d/ejemplo"
         },
         {
-            "id": 2,
             "titulo": "Solución Taller 1 - Unidad 2",
             "materia": "Matemáticas Especiales",
             "descripcion": "Desarrollo de ejercicios prácticos sobre las temáticas de la unidad 2.",
-            "imagen": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop",
-            "enlace": ""
-        },
-        {
-            "id": 3,
-            "titulo": "Proyecto de Aula / PIA (EnContexto)",
-            "materia": "Desarrollo de Software",
-            "descripcion": "Presentación del pitch y estructura del proyecto para la convocatoria de proyectos destacados.",
-            "imagen": "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&auto=format&fit=crop",
+            "imagen": "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=600&q=80",
             "enlace": ""
         }
     ]
 
-# 2. Panel lateral para agregar enlaces manualmente
-st.sidebar.header("⚙️ Gestionar Enlaces")
-st.sidebar.write("Añade o actualiza el enlace de tu actividad aquí:")
+# 2. PANEL LATERAL: Gestión del Portafolio
+st.sidebar.header("🛠️ Panel de Control")
 
-nombres_actividades = [act["titulo"] for act in st.session_state.actividades]
-actividad_seleccionada = st.sidebar.selectbox("Selecciona una actividad:", nombres_actividades)
+opcion = st.sidebar.radio("Selecciona una acción:", ["➕ Nueva Actividad", "🔗 Editar / Agregar Enlace"])
 
-# Obtener objeto de la actividad seleccionada
-act_obj = next(act for act in st.session_state.actividades if act["titulo"] == actividad_seleccionada)
+# Opción A: Añadir una nueva actividad desde cero
+if opcion == "➕ Nueva Actividad":
+    st.sidebar.subheader("Agregar Actividad")
+    
+    nuevo_titulo = st.sidebar.text_input("Título de la actividad:")
+    nueva_materia = st.sidebar.text_input("Materia / Curso:")
+    nueva_desc = st.sidebar.text_area("Descripción corta:")
+    nueva_imagen = st.sidebar.text_input(
+        "URL de la imagen:", 
+        placeholder="https://ejemplo.com/imagen.jpg"
+    )
+    nuevo_enlace = st.sidebar.text_input(
+        "Enlace del proyecto / entregable:", 
+        placeholder="https://github.com/... o Google Drive"
+    )
 
-# Campo para ingresar el link
-nuevo_link = st.sidebar.text_input("Enlace / URL de la actividad:", value=act_obj["enlace"])
+    if st.sidebar.button("✨ Guardar Actividad", use_container_width=True):
+        if nuevo_titulo and nueva_materia:
+            # Usar una imagen por defecto si el usuario no pone una
+            img_final = nueva_imagen if nueva_imagen else "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80"
+            
+            nueva_act = {
+                "titulo": nuevo_titulo,
+                "materia": nueva_materia,
+                "descripcion": nueva_desc,
+                "imagen": img_final,
+                "enlace": nuevo_enlace
+            }
+            
+            # Agregar al inicio de la lista para que aparezca primero
+            st.session_state.actividades.insert(0, nueva_act)
+            st.sidebar.success(f"¡Actividad '{nuevo_titulo}' agregada exitosamente!")
+            st.rerun()
+        else:
+            st.sidebar.error("Por favor ingresa al menos el título y la materia.")
 
-if st.sidebar.button("💾 Guardar Enlace"):
-    act_obj["enlace"] = nuevo_link
-    st.sidebar.success(f"¡Enlace actualizado para '{actividad_seleccionada}'!")
-    st.rerun()
+# Opción B: Actualizar el enlace de una actividad existente
+elif opcion == "🔗 Editar / Agregar Enlace":
+    st.sidebar.subheader("Actualizar Enlace")
+    
+    if st.session_state.actividades:
+        titulos = [act["titulo"] for act in st.session_state.actividades]
+        act_sel_titulo = st.sidebar.selectbox("Selecciona la actividad:", titulos)
+        
+        # Buscar el objeto de la actividad elegida
+        act_obj = next(act for act in st.session_state.actividades if act["titulo"] == act_sel_titulo)
+        
+        link_actualizado = st.sidebar.text_input("Nuevo enlace URL:", value=act_obj["enlace"])
+        
+        if st.sidebar.button("💾 Actualizar Enlace", use_container_width=True):
+            act_obj["enlace"] = link_actualizado
+            st.sidebar.success("¡Enlace actualizado correctamente!")
+            st.rerun()
+    else:
+        st.sidebar.info("No hay actividades registradas aún.")
 
 st.divider()
 
-# 3. Vista principal del Portafolio
-st.subheader("📌 Mis Entregables")
+# 3. VISTA PRINCIPAL: Muestra de tarjetas de actividades
+st.subheader(f"📌 Entregables ({len(st.session_state.actividades)})")
+
+if not st.session_state.actividades:
+    st.info("No hay actividades guardadas. Utiliza el panel lateral para agregar la primera.")
 
 for act in st.session_state.actividades:
     with st.container():
         col_img, col_info = st.columns([1, 2])
         
-        # Imagen de la actividad
+        # Columna de la Imagen de la Actividad
         with col_img:
-            st.image(act["imagen"], use_container_width=True, caption=act["titulo"])
+            st.image(act["imagen"], use_container_width=True)
             
-        # Información relevante y enlace
+        # Columna de la Información y Enlaces
         with col_info:
             st.markdown(f"### {act['titulo']}")
-            st.caption(f"📚 **Materia/Área:** {act['materia']}")
-            st.write(f"**Descripción:** {act['descripcion']}")
+            st.caption(f"📚 **Materia:** {act['materia']}")
             
+            if act["descripcion"]:
+                st.write(act["descripcion"])
+            
+            st.write("") # Espacio visual
+            
+            # Botón / Link para ver la entrega
             if act["enlace"]:
-                st.markdown(f"🔗 **[Abrir / Ver Entregables del Portafolio]({act['enlace']})**")
+                st.markdown(f"👉 **[Ver proyecto / entregable completo 🔗]({act['enlace']})**")
             else:
-                st.info("⚠️ Aún no has agregado un enlace para esta actividad. Utiliza el panel lateral de la izquierda para incluirlo.")
+                st.warning("⚠️ Sin enlace adjunto. Puedes agregarlo desde el panel lateral.")
                 
         st.divider()
